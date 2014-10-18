@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+    packagingOptions {
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+
     compileSdkVersion 21
     buildToolsVersion "21.0.1"
 
@@ -27,4 +33,5 @@ dependencies {
     compile 'com.jakewharton:butterknife:5.1.2'
     compile 'com.mcxiaoke.volley:library:1.0.6'
     compile 'com.squareup.picasso:picasso:2.3.4'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
 }

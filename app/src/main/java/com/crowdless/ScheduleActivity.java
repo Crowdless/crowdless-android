@@ -2,40 +2,42 @@ package com.crowdless;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import butterknife.ButterKnife;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISFeatureLayer;
 
-
-public class ScheduleActivity extends Activity {
+public class ScheduleActivity extends Activity
+{
+//    @InjectView(R.id.map)
+    MapView map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
+        ButterKnife.inject(this);
+        map = (MapView) findViewById(R.id.map);
         getActionBar().setTitle("Let's go!");
     }
 
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.schedule, menu);
-        return true;
-    }
+    protected void onStart()
+    {
+        super.onStart();
+        map.addLayer(new ArcGISFeatureLayer("http://services3.arcgis.com/hiVQEfGAv4lHzgdT/arcgis/rest/services/lats/FeatureServer/0", ArcGISFeatureLayer.MODE.SNAPSHOT));
+//        JsonArrayRequest jsonObjReq = new JsonArrayRequest("http://crowdless.nodejitsu.com/json", null, new Response.Listener<JSONArray>()
+//        {
+//            @Override
+//            public void onResponse(JSONArray response)
+//            {
+//                Log.i("Crowdless", "got response: " + response);
+////                for (JSONObject object : response)
+////                {
+////
+////                }
+//            }
+//        }, null);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }
