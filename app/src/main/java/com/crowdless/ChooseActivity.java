@@ -17,10 +17,12 @@ import butterknife.InjectView;
 import butterknife.OnClick;
 import butterknife.OnItemClick;
 import com.android.volley.Response;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -59,20 +61,32 @@ public class ChooseActivity extends Activity
         if (adapter == null)
         {
             dialog = ProgressDialog.show(this, null, "Finding points of interest...");
-            JsonObjectRequest jsonObjReq = new JsonObjectRequest("http://crowdless.nodejitsu.com/json", null, new Response.Listener<JSONObject>()
+            JsonArrayRequest req = new JsonArrayRequest("http://crowdless.nodejitsu.com/landmarks", new Response.Listener<JSONArray>()
             {
                 @Override
-                public void onResponse(JSONObject response)
+                public void onResponse(JSONArray response)
                 {
                     Log.i("Crowdless", "got poi response: " + response);
 
                     List<POI> pois = new ArrayList<POI>();
-                    pois.add(new POI("sakdjklasjd", "http://www.londonnet.co.uk/files/images/sightseeing/big-ben.jpg", "Big Ben", 51.5008, 0.1247, "A big ass clock", 4.7f, 99));
+                    for (int i=0; i<response.length(); i++)
+                    {
+                        try
+                        {
+                            JSONObject obj = response.getJSONObject(i);
+                            pois.add(new POI(obj.getString("_id"), obj.getString("image_url"), obj.getString("name"), obj.getJSONArray("coords").getDouble(0), obj.getJSONArray("coords").getDouble(1), obj.getString("description"), (float) obj.getDouble("rating") / 2.0f, 99));
+                        }
+                        catch (JSONException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+
                     gotPois(pois);
                     dismissDialog();
                 }
             }, null);
-            Volley.newRequestQueue(this).add(jsonObjReq);
+            Volley.newRequestQueue(this).add(req);
         }
     }
 
@@ -218,6 +232,7 @@ public class ChooseActivity extends Activity
 
             ((TextView) view.findViewById(R.id.txt_title)).setText(poi.name);
             ((TextView) view.findViewById(R.id.txt_description)).setText(poi.description);
+            ((RatingBar) view.findViewById(R.id.rating_poi)).setRating(poi.rating);
             Picasso.with(ChooseActivity.this).cancelRequest(((ImageView) view.findViewById(R.id.img_poi)));
             Picasso.with(ChooseActivity.this).load(poi.imageUrl).into((ImageView) view.findViewById(R.id.img_poi));
             view.findViewById(R.id.img_check).setVisibility(checkedPois.contains(poi) ? View.VISIBLE : View.GONE);

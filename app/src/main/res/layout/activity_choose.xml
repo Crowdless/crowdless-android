@@ -18,6 +18,8 @@
             android:textAllCaps="true"
             android:textSize="16sp"
             android:background="@drawable/button_flat"
+            android:drawableRight="@drawable/next"
+            android:drawableEnd="@drawable/next"
             android:visibility="gone"/>
 
 </FrameLayout>

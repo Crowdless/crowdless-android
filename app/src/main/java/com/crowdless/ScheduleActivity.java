@@ -25,7 +25,7 @@ public class ScheduleActivity extends Activity
     protected void onStart()
     {
         super.onStart();
-        map.addLayer(new ArcGISFeatureLayer("http://services3.arcgis.com/hiVQEfGAv4lHzgdT/arcgis/rest/services/lats/FeatureServer/0", ArcGISFeatureLayer.MODE.SNAPSHOT));
+        map.addLayer(new ArcGISFeatureLayer("http://services3.arcgis.com/hiVQEfGAv4lHzgdT/arcgis/rest/services/datafile/FeatureServer/0", ArcGISFeatureLayer.MODE.SNAPSHOT));
 //        JsonArrayRequest jsonObjReq = new JsonArrayRequest("http://crowdless.nodejitsu.com/json", null, new Response.Listener<JSONArray>()
 //        {
 //            @Override
@@ -38,6 +38,5 @@ public class ScheduleActivity extends Activity
 ////                }
 //            }
 //        }, null);
-
     }
 }

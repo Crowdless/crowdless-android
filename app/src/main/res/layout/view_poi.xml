@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#333333"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:text="This place"/>
 
         <TextView
@@ -38,9 +38,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="#555555"
-                android:textSize="12sp"
+                android:textColor="#666666"
+                android:textSize="14sp"
                 android:text="Omg big ben is the best place in the world, like God Damn it's good!"/>
+
+        <RatingBar
+                android:id="@+id/rating_poi"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:isIndicator="true"/>
 
     </LinearLayout>
 
