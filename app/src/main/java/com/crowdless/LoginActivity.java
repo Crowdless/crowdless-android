@@ -57,7 +57,6 @@ public class LoginActivity extends Activity
         String url = "https://www.yammer.com/oauth2/access_token.json?client_id=kw9NUS1z7jWE3dNfGwAkA&client_secret=cdyKBt9cc7mRgSsnbIHvKDG0YKZT7Zg62mUOPviNqY&code=" + code;
 
         final ProgressDialog dialog = ProgressDialog.show(this, null, "Logging in...");
-
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>()
         {
             @Override
