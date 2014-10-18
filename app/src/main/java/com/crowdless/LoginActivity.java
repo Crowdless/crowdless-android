@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import butterknife.ButterKnife;
@@ -35,6 +36,7 @@ public class LoginActivity extends Activity
     void onLoginYammerClicked()
     {
         webView.clearCache(true);
+        CookieManager.getInstance().removeAllCookie();
         webView.setWebViewClient(new CustomWebViewClient());
         webView.loadUrl("https://www.yammer.com/dialog/oauth?client_id=kw9NUS1z7jWE3dNfGwAkA&redirect_uri=https://www.yammer.com");
         webView.setVisibility(View.VISIBLE);
