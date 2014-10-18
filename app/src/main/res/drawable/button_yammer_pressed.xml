@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ Created by Krishan Patel.
+  ~ Copyright (c) 2014. Rocko Labs Ltd. All Rights Reserved.
+  -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/yammer_dark" />
+    <padding android:left="12dp" android:top="8dp" android:right="12dp" android:bottom="8dp" />
+    <corners android:radius="4dp"/>
+</shape>
