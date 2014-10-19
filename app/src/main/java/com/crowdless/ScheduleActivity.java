@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -23,6 +24,7 @@ import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISFeatureLayer;
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
 import com.esri.core.io.UserCredentials;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.MarkerSymbol;
@@ -32,6 +34,7 @@ import com.esri.core.tasks.na.*;
 import com.squareup.picasso.Picasso;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ScheduleActivity extends Activity
@@ -45,18 +48,15 @@ public class ScheduleActivity extends Activity
     @InjectView(R.id.list_places)
     ListView listPlaces;
 
-    @InjectView(R.id.btn_view_instructions)
-    View btnViewInstructions;
-
-    @InjectView(R.id.v_directions)
-    View vDirections;
+    @InjectView(R.id.txt_directions)
+    TextView txtDirections;
 
     private MenuItem menuItemList;
     private MenuItem menuItemMap;
-    private MenuItem menuItemClose;
     private boolean listShowing = false;
-    private boolean directionsShowing = false;
     private GraphicsLayer graphicsLayer;
+    private List<String> directions;
+    private int directionIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -66,8 +66,7 @@ public class ScheduleActivity extends Activity
         ButterKnife.inject(this);
         getActionBar().setTitle("Let's go!");
         vPlaces.setVisibility(View.GONE);
-        btnViewInstructions.setVisibility(View.GONE);
-        vDirections.setVisibility(View.GONE);
+        txtDirections.setVisibility(View.GONE);
     }
 
     @Override
@@ -76,16 +75,14 @@ public class ScheduleActivity extends Activity
         getMenuInflater().inflate(R.menu.schedule, menu);
         menuItemList = menu.findItem(R.id.action_list);
         menuItemMap = menu.findItem(R.id.action_map);
-        menuItemClose = menu.findItem(R.id.action_close);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
-        menuItemList.setVisible(!directionsShowing && !listShowing);
-        menuItemMap.setVisible(!directionsShowing && listShowing);
-        menuItemClose.setVisible(directionsShowing);
+        menuItemList.setVisible(!listShowing);
+        menuItemMap.setVisible(listShowing);
         return true;
     }
 
@@ -102,12 +99,6 @@ public class ScheduleActivity extends Activity
             case R.id.action_map:
                 vPlaces.setVisibility(View.GONE);
                 listShowing = !listShowing;
-                invalidateOptionsMenu();
-                return true;
-            case R.id.action_close:
-                vDirections.setVisibility(View.GONE);
-                btnViewInstructions.setVisibility(View.VISIBLE);
-                directionsShowing = false;
                 invalidateOptionsMenu();
                 return true;
         }
@@ -142,12 +133,14 @@ public class ScheduleActivity extends Activity
 
             points[i] = new StopGraphic(mapPoint);
             points[i].setRouteName("route");
+            points[i].setName(entry.poi.name);
             i++;
         }
 
         listPlaces.setAdapter(new ScheduleAdapter(((CrowdlessApplication) getApplication()).schedule));
 
-        final JsonObjectRequest req = new JsonObjectRequest("https://www.arcgis.com/sharing/oauth2/token?client_id=eSZtcJr46c3BHD3X&grant_type=client_credentials&client_secret=1986ae12fc93450cb893925153e6dae3&f=pjson", null, new Response.Listener<JSONObject>() {
+        final JsonObjectRequest req = new JsonObjectRequest("https://www.arcgis.com/sharing/oauth2/token?client_id=eSZtcJr46c3BHD3X&grant_type=client_credentials&client_secret=1986ae12fc93450cb893925153e6dae3&f=pjson", null, new Response.Listener<JSONObject>()
+        {
             @Override
             public void onResponse(JSONObject response)
             {
@@ -181,13 +174,12 @@ public class ScheduleActivity extends Activity
         return new Point(mercatorX_lon, mercatorY_lat);
     }
 
-    @OnClick(R.id.btn_view_instructions)
-    void onViewInstructionsClicked()
+    @OnClick(R.id.txt_directions)
+    void onTextDirectionsClicked()
     {
-        btnViewInstructions.setVisibility(View.GONE);
-        vDirections.setVisibility(View.VISIBLE);
-        directionsShowing = true;
-        invalidateOptionsMenu();
+        if (directionIndex == directions.size() - 1)
+            return;
+        txtDirections.setText(Html.fromHtml(directions.get(++directionIndex)));
     }
 
     private final class ScheduleAdapter extends BaseAdapter
@@ -270,25 +262,45 @@ public class ScheduleActivity extends Activity
                     routeParams.setImpedanceAttributeName("Time");
 
                 NAFeaturesAsFeature naFeatures = new NAFeaturesAsFeature();
-                // naFeatures.setSpatialReference(SpatialReference.create(102100));
+                naFeatures.setSpatialReference(SpatialReference.create(102100));
                 naFeatures.addFeatures(points);
                 routeParams.setStops(naFeatures);
+                routeParams.setReturnRoutes(true);
+                routeParams.setReturnStops(true);
+                routeParams.setReturnDirections(true);
+                routeParams.setReturnPointBarriers(true);
+                routeParams.setReturnPolygonBarriers(true);
+                routeParams.setReturnPolylineBarriers(true);
+                routeParams.setReturnZ(true);
 
                 RouteResult results = routeTask.solve(routeParams);
 
                 Log.i("Crowdless", "results: " + results);
+                directions = new ArrayList<String>();
 
                 Route route = results.getRoutes().get(0);
+                Log.i("Crowdless", "route: " + route);
                 for (RouteDirection r : route.getRoutingDirections())
                 {
-                    for (DirectionsString s : r.getDirectionsStrings())
-                    {
-                        Log.i("Crowdless", s.getValue());
-                    }
+                    Log.i("Crowdless", "RouteDirection: " + r);
+                    directions.add(r.getText()
+                            .replace("east", "<b>east</b>")
+                            .replace("west", "<b>west</b>")
+                            .replace("north", "<b>north</b>")
+                            .replace("south", "<b>south</b>")
+                            .replace("arrive", "<b>arrive</b>")
+                            .replace("Arrive", "<b>Arrive</b>")
+                            .replace("depart", "<b>depart</b>")
+                            .replace("Depart", "<b>Depart</b>")
+                            .replace("Start", "<b>Start</b>")
+                            .replace("Finish", "<b>Finish</b>")
+                            .replace("left", "<b>left</b>")
+                            .replace("right", "<b>right</b>"));
                 }
-
                 Geometry routeGeom = route.getRouteGraphic().getGeometry();
-                Graphic symbolGraphic = new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE,3));
+                Log.i("Crowdless", "routeGeom: " + routeGeom);
+                Graphic symbolGraphic = new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE, 3));
+                Log.i("Crowdless", "symbolGraphic: " + symbolGraphic);
                 return symbolGraphic;
             }
             catch (Exception e)
@@ -302,12 +314,20 @@ public class ScheduleActivity extends Activity
         @Override
         protected void onPostExecute(Graphic graphic)
         {
-            if (graphic != null)
-                graphicsLayer.addGraphic(graphic);
+//            txtDirections.setText(Html.fromHtml(directions));
+            directionIndex = -1;
+            onTextDirectionsClicked();
 
-            btnViewInstructions.setVisibility(View.VISIBLE);
-            btnViewInstructions.setTranslationY(btnViewInstructions.getHeight());
-            ObjectAnimator anim = ObjectAnimator.ofFloat(btnViewInstructions, "translationY", btnViewInstructions.getHeight(), 0);
+            if (graphic != null)
+            {
+//                GraphicsLayer graphicsLayer = new GraphicsLayer();
+//                map.addLayer(graphicsLayer);
+                graphicsLayer.addGraphic(graphic);
+            }
+
+            txtDirections.setVisibility(View.VISIBLE);
+            txtDirections.setTranslationY(txtDirections.getHeight());
+            ObjectAnimator anim = ObjectAnimator.ofFloat(txtDirections, "translationY", txtDirections.getHeight(), 0);
             anim.setInterpolator(new LinearInterpolator());
             anim.setDuration(200);
             anim.start();
