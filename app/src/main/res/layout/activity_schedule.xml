@@ -126,4 +126,26 @@
 
     </FrameLayout>
 
+    <Button
+            android:id="@+id/btn_view_instructions"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom"
+            android:textColor="@color/white"
+            android:textAllCaps="true"
+            android:textSize="16sp"
+            android:text="View Directions"
+            android:background="@drawable/button_flat"
+            android:drawableRight="@drawable/next"
+            android:drawableEnd="@drawable/next"
+            android:visibility="gone"/>
+
+    <FrameLayout
+            android:id="@+id/v_directions"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white">
+
+    </FrameLayout>
+
 </FrameLayout>

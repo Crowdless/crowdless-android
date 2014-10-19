@@ -67,12 +67,13 @@ public class ChooseActivity extends Activity
                 @Override
                 public void onResponse(JSONArray response)
                 {
+
                     Log.i("Crowdless", "got poi response: " + response);
 
                     int sum = 0;
                     peopleCounts = new int[response.length()];
                     List<POI> pois = new ArrayList<POI>();
-                    for (int i=0; i<response.length(); i++)
+                    for (int i = 0; i < response.length(); i++)
                     {
                         try
                         {
@@ -134,7 +135,7 @@ public class ChooseActivity extends Activity
         String ids = "";
         for (POI poi : checkedPois)
             ids += poi.id + ",";
-        ids = ids.substring(0, ids.length()-1);
+        ids = ids.substring(0, ids.length() - 1);
 
         dismissDialog();
         dialog = ProgressDialog.show(this, null, "Generating your schedule...");
@@ -143,9 +144,21 @@ public class ChooseActivity extends Activity
             @Override
             public void onResponse(JSONArray response)
             {
+
+//        JSONArray response = null;
+//        try
+//        {
+//            response = new JSONArray("[{\"landmark\":{\"name\" : \"Royal Botanic Gardens\",\"description\" : \"Although firstly a scientific organisation, this British institution houses numerous collection of plants and botanical information and as such is a living encyclopaedia on the plant kingdom.\",\"people\" : 0,\"image_url\" : \"https://irs2.4sqi.net/img/general/500x500/10366144_2zBB57G5DSK3N_CmNi_FFaoIrQwrgJyka1SyCd3n5WQ.jpg\",\"rating\" : 9.5,\"coords\" : [51.47774796879882,-0.296630859375 ],  \"_id\" : \"544300f56ea6d467f8c5d933\"},\"timeframe\":{\"start\":12343,\"end\":12344}}," +
+//                    "{\"landmark\":{\"name\" : \"Royal Botanic Gardens 2\",\"description\" : \"Although firstly a scientific organisation, this British institution houses numerous collection of plants and botanical information and as such is a living encyclopaedia on the plant kingdom.\",\"people\" : 0,\"image_url\" : \"https://irs2.4sqi.net/img/general/500x500/10366144_2zBB57G5DSK3N_CmNi_FFaoIrQwrgJyka1SyCd3n5WQ.jpg\",\"rating\" : 9.5,\"coords\" : [51.49774796879882,-0.286630859375 ],  \"_id\" : \"544300f56ea6d467f8c5d933\"},\"timeframe\":{\"start\":12343,\"end\":12344}}]");
+//        }
+//        catch (Exception e)
+//        {
+//            e.printStackTrace();
+//        }
+
                 Log.i("Crowdless", "response: " + response);
                 List<ScheduleEntry> entries = new ArrayList<ScheduleEntry>();
-                for (int i=0; i<response.length(); i++)
+                for (int i = 0; i < response.length(); i++)
                 {
                     try
                     {
@@ -248,5 +261,4 @@ public class ChooseActivity extends Activity
             return view;
         }
     }
-
 }

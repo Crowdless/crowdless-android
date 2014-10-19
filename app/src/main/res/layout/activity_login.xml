@@ -19,7 +19,19 @@
         <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_weight="5"/>
+                android:layout_weight="1"/>
+
+        <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerCrop"
+                android:src="@drawable/logo"/>
+
+        <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="4"/>
 
         <Button
                 android:id="@+id/btn_login_yammer"
