@@ -2,7 +2,7 @@ package com.crowdless;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.graphics.Color;
+import android.app.ProgressDialog;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,8 +22,8 @@ import com.android.volley.toolbox.Volley;
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISFeatureLayer;
-import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.io.UserCredentials;
 import com.esri.core.map.Graphic;
@@ -57,6 +57,7 @@ public class ScheduleActivity extends Activity
     private GraphicsLayer graphicsLayer;
     private List<String> directions;
     private int directionIndex;
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -111,25 +112,27 @@ public class ScheduleActivity extends Activity
         super.onStart();
         map.addLayer(new ArcGISFeatureLayer("http://services3.arcgis.com/hiVQEfGAv4lHzgdT/arcgis/rest/services/dataexporttweets_(1)/FeatureServer/0", ArcGISFeatureLayer.MODE.SNAPSHOT));
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        dialog = ProgressDialog.show(this, null, "Loading your route...");
 
-        graphicsLayer = new GraphicsLayer();
-        map.addLayer(graphicsLayer);
-        Drawable d = getResources().getDrawable(R.drawable.marker);
+//        DisplayMetrics metrics = new DisplayMetrics();
+//        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//
+//        graphicsLayer = new GraphicsLayer();
+//        map.addLayer(graphicsLayer);
+//        Drawable d = getResources().getDrawable(R.drawable.marker);
 
         final StopGraphic[] points = new StopGraphic[((CrowdlessApplication) getApplication()).schedule.size()];
         int i = 0;
 
         for (ScheduleEntry entry : ((CrowdlessApplication) getApplication()).schedule)
         {
-            MarkerSymbol sym = new PictureMarkerSymbol(d);
-            sym.setOffsetX((d.getIntrinsicWidth() / 2) / metrics.density);
-            sym.setOffsetY((d.getIntrinsicHeight() / 2) / metrics.density);
+//            MarkerSymbol sym = new PictureMarkerSymbol(d);
+//            sym.setOffsetX((d.getIntrinsicWidth() / 2) / metrics.density);
+//            sym.setOffsetY((d.getIntrinsicHeight() / 2) / metrics.density);
             Point latlon = new Point(entry.poi.longitude, entry.poi.latitude);
             Point mapPoint = tomerc(latlon);
-            Graphic marker = new Graphic(mapPoint, sym);
-            graphicsLayer.addGraphic(marker);
+//            Graphic marker = new Graphic(mapPoint, sym);
+//            graphicsLayer.addGraphic(marker);
 
             points[i] = new StopGraphic(mapPoint);
             points[i].setRouteName("route");
@@ -177,7 +180,7 @@ public class ScheduleActivity extends Activity
     @OnClick(R.id.txt_directions)
     void onTextDirectionsClicked()
     {
-        if (directionIndex == directions.size() - 1)
+        if (directions == null || directionIndex == directions.size() - 1)
             return;
         txtDirections.setText(Html.fromHtml(directions.get(++directionIndex)));
     }
@@ -297,9 +300,15 @@ public class ScheduleActivity extends Activity
                             .replace("left", "<b>left</b>")
                             .replace("right", "<b>right</b>"));
                 }
-                Geometry routeGeom = route.getRouteGraphic().getGeometry();
+                Polyline routeGeom = (Polyline) route.getRouteGraphic().getGeometry();
+                for (int i=0; i<routeGeom.getPointCount(); i++)
+                {
+                    Point p = routeGeom.getPoint(i);
+                    routeGeom.setPoint(i, tomerc(p));
+                }
+
                 Log.i("Crowdless", "routeGeom: " + routeGeom);
-                Graphic symbolGraphic = new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE, 3));
+                Graphic symbolGraphic = new Graphic(routeGeom, new SimpleLineSymbol(getResources().getColor(R.color.primary_dark), 10));
                 Log.i("Crowdless", "symbolGraphic: " + symbolGraphic);
                 return symbolGraphic;
             }
@@ -314,9 +323,14 @@ public class ScheduleActivity extends Activity
         @Override
         protected void onPostExecute(Graphic graphic)
         {
-//            txtDirections.setText(Html.fromHtml(directions));
-            directionIndex = -1;
-            onTextDirectionsClicked();
+            dialog.dismiss();
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+            graphicsLayer = new GraphicsLayer();
+            map.addLayer(graphicsLayer);
+            Drawable d = getResources().getDrawable(R.drawable.marker);
 
             if (graphic != null)
             {
@@ -324,6 +338,20 @@ public class ScheduleActivity extends Activity
 //                map.addLayer(graphicsLayer);
                 graphicsLayer.addGraphic(graphic);
             }
+
+            for (ScheduleEntry entry : ((CrowdlessApplication) getApplication()).schedule)
+            {
+                MarkerSymbol sym = new PictureMarkerSymbol(d);
+                sym.setOffsetX((d.getIntrinsicWidth() / 2) / metrics.density);
+                sym.setOffsetY((d.getIntrinsicHeight() / 2) / metrics.density);
+                Point latlon = new Point(entry.poi.longitude, entry.poi.latitude);
+                Point mapPoint = tomerc(latlon);
+                Graphic marker = new Graphic(mapPoint, sym);
+                graphicsLayer.addGraphic(marker);
+            }
+
+            directionIndex = -1;
+            onTextDirectionsClicked();
 
             txtDirections.setVisibility(View.VISIBLE);
             txtDirections.setTranslationY(txtDirections.getHeight());
