@@ -1,9 +1,10 @@
 package com.crowdless;
 
 import android.app.Application;
-import org.json.JSONArray;
+
+import java.util.List;
 
 public class CrowdlessApplication extends Application
 {
-    public JSONArray schedule;
+    public List<ScheduleEntry> schedule;
 }

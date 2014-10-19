@@ -18,7 +18,6 @@ import butterknife.OnClick;
 import butterknife.OnItemClick;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
@@ -39,6 +38,8 @@ public class ChooseActivity extends Activity
     private ProgressDialog dialog;
     private List<POI> checkedPois;
     private PoiAdapter adapter;
+    private int[] peopleCounts;
+    private float peopleAverage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,20 +62,24 @@ public class ChooseActivity extends Activity
         if (adapter == null)
         {
             dialog = ProgressDialog.show(this, null, "Finding points of interest...");
-            JsonArrayRequest req = new JsonArrayRequest("http://crowdless.nodejitsu.com/landmarks", new Response.Listener<JSONArray>()
+            JsonArrayRequest req = new JsonArrayRequest("http://crowdless.jitsu.com/landmarks", new Response.Listener<JSONArray>()
             {
                 @Override
                 public void onResponse(JSONArray response)
                 {
                     Log.i("Crowdless", "got poi response: " + response);
 
+                    int sum = 0;
+                    peopleCounts = new int[response.length()];
                     List<POI> pois = new ArrayList<POI>();
                     for (int i=0; i<response.length(); i++)
                     {
                         try
                         {
                             JSONObject obj = response.getJSONObject(i);
-                            pois.add(new POI(obj.getString("_id"), obj.getString("image_url"), obj.getString("name"), obj.getJSONArray("coords").getDouble(0), obj.getJSONArray("coords").getDouble(1), obj.getString("description"), (float) obj.getDouble("rating") / 2.0f, 99));
+                            peopleCounts[i] = obj.getInt("people");
+                            sum += peopleCounts[i];
+                            pois.add(new POI(obj));
                         }
                         catch (JSONException e)
                         {
@@ -82,6 +87,7 @@ public class ChooseActivity extends Activity
                         }
                     }
 
+                    peopleAverage = sum / (float) response.length();
                     gotPois(pois);
                     dismissDialog();
                 }
@@ -125,23 +131,38 @@ public class ChooseActivity extends Activity
     @OnClick(R.id.btn_done)
     void onDoneClicked()
     {
-        JSONArray pois = new JSONArray();
+        String ids = "";
         for (POI poi : checkedPois)
-            pois.put(poi.id);
+            ids += poi.id + ",";
+        ids = ids.substring(0, ids.length()-1);
 
         dismissDialog();
         dialog = ProgressDialog.show(this, null, "Generating your schedule...");
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest("http://crowdless.nodejitsu.com/json", null, new Response.Listener<JSONObject>()
+        JsonArrayRequest req = new JsonArrayRequest("http://crowdless.jitsu.com/schedule?ids=" + ids, new Response.Listener<JSONArray>()
         {
             @Override
-            public void onResponse(JSONObject response)
+            public void onResponse(JSONArray response)
             {
-                ((CrowdlessApplication) getApplication()).schedule = null;
+                Log.i("Crowdless", "response: " + response);
+                List<ScheduleEntry> entries = new ArrayList<ScheduleEntry>();
+                for (int i=0; i<response.length(); i++)
+                {
+                    try
+                    {
+                        entries.add(new ScheduleEntry(response.getJSONObject(i)));
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+
+                ((CrowdlessApplication) getApplication()).schedule = entries;
                 startActivity(new Intent(ChooseActivity.this, ScheduleActivity.class));
                 dismissDialog();
             }
         }, null);
-        Volley.newRequestQueue(this).add(jsonObjReq);
+        Volley.newRequestQueue(this).add(req);
     }
 
     @Override
@@ -169,30 +190,6 @@ public class ChooseActivity extends Activity
             return true;
         }
         return false;
-    }
-
-    private final class POI
-    {
-        public String id;
-        public String name;
-        public String description;
-        public String imageUrl;
-        public double latitude;
-        public double longitude;
-        public float rating;
-        public float business;
-
-        private POI(String id, String imageUrl, String name, double latitude, double longitude, String description, float rating, float business)
-        {
-            this.id = id;
-            this.imageUrl = imageUrl;
-            this.name = name;
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.description = description;
-            this.rating = rating;
-            this.business = business;
-        }
     }
 
     private final class PoiAdapter extends BaseAdapter
@@ -236,6 +233,17 @@ public class ChooseActivity extends Activity
             Picasso.with(ChooseActivity.this).cancelRequest(((ImageView) view.findViewById(R.id.img_poi)));
             Picasso.with(ChooseActivity.this).load(poi.imageUrl).into((ImageView) view.findViewById(R.id.img_poi));
             view.findViewById(R.id.img_check).setVisibility(checkedPois.contains(poi) ? View.VISIBLE : View.GONE);
+
+            Log.i("Crowdless", "values: " + poi.business + " / " + peopleAverage);
+
+            boolean show = poi.business >= peopleAverage / 2.0f;
+            view.findViewById(R.id.img_flame_1).setVisibility(checkedPois.contains(poi) || !show ? View.GONE : View.VISIBLE);
+
+            show = poi.business >= peopleAverage;
+            view.findViewById(R.id.img_flame_2).setVisibility(checkedPois.contains(poi) || !show ? View.GONE : View.VISIBLE);
+
+            show = poi.business >= peopleAverage * 2;
+            view.findViewById(R.id.img_flame_3).setVisibility(checkedPois.contains(poi) || !show ? View.GONE : View.VISIBLE);
 
             return view;
         }

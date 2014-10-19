@@ -38,6 +38,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:ellipsize="end"
                 android:textColor="#666666"
                 android:textSize="14sp"
                 android:text="Omg big ben is the best place in the world, like God Damn it's good!"/>
@@ -52,13 +54,47 @@
 
     </LinearLayout>
 
-    <ImageView
-            android:id="@+id/img_check"
+    <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/tick"/>
+            android:layout_height="match_parent"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp">
+
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+            <ImageView
+                    android:id="@+id/img_flame_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/flame"/>
+
+            <ImageView
+                    android:id="@+id/img_flame_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/flame"/>
+
+            <ImageView
+                    android:id="@+id/img_flame_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/flame"/>
+
+        </LinearLayout>
+
+        <ImageView
+                android:id="@+id/img_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/tick"/>
+
+    </FrameLayout>
 
 </LinearLayout>
